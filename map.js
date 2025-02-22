@@ -20,7 +20,7 @@ map.on('load', () => {
     source: 'boston_route',
     paint: {
     'line-color': '#32D400',  // A bright green using hex code
-    'line-width': 5,          // Thicker lines
+    'line-width': 4,          // Thicker lines
     'line-opacity': 0.6       // Slightly less transparent
     }
     });
@@ -34,7 +34,7 @@ map.on('load', () => {
     source: 'cambridge_route',
     paint: {
     'line-color': '#32D400',  // A bright green using hex code
-    'line-width': 5,          // Thicker lines
+    'line-width': 4,          // Thicker lines
     'line-opacity': 0.6       // Slightly less transparent
     }
     });
