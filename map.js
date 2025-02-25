@@ -18,6 +18,7 @@ function getCoords(station) {
 }
 let departuresByMinute = Array.from({ length: 1440 }, () => []);
 let arrivalsByMinute = Array.from({ length: 1440 }, () => []);
+let stationFlow = d3.scaleQuantize().domain([0, 1]).range([0, 0.5, 1]);
 
 map.on('load', async () => { 
     map.addSource('boston_route', {
@@ -99,6 +100,7 @@ map.on('load', async () => {
       .attr('stroke', 'white')    // Circle border color
       .attr('stroke-width', 1)    // Circle border thickness
       .attr('opacity', 0.8)   // Circle opacity
+      .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic)) 
       .each(function(d) {
         // Add <title> for browser tooltips
         d3.select(this)
@@ -152,6 +154,9 @@ map.on('load', async () => {
       
       // Update the scatterplot by adjusting the radius of circles
       circles
+        .style('--departure-ratio', (d) =>
+          stationFlow(d.departures / d.totalTraffic),
+        )
         .data(filteredStations, (d) => d.short_name)
         .join('circle') // Ensure the data is bound correctly
         .attr('r', (d) => radiusScale(d.totalTraffic)); // Update circle sizes

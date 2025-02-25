@@ -8,3 +8,53 @@ body {
     margin: auto;
     padding: 1em;
   }
+  :root {
+    --color-departures: steelblue;
+    --color-arrivals: darkorange;
+  }
+  
+  circle, .legend > div {
+    --color: color-mix(
+      in oklch,
+      var(--color-departures) calc(100% * var(--departure-ratio)),
+      var(--color-arrivals)
+    );
+    fill: var(--color);
+    background-color: var(--color); /* Needed for legend divs */
+  }
+  
+  /* Legend Styling */
+  .legend {
+    display: flex;
+    gap: 1px;
+    width: 100%;
+    margin-block: 10px;
+    justify-content: center;
+    padding: 5px;
+    
+  }
+  
+  .legend > div {
+    flex: 1;
+    padding: 5px 100px;
+    min-width: 100px;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+  }
+  
+  .legend > div:first-child {
+    --departure-ratio: 1;
+    text-align: left;
+  }
+  
+  .legend > div:nth-child(2) {
+    --departure-ratio: 0.5;
+    text-align: center;
+  }
+  
+  .legend > div:last-child {
+    --departure-ratio: 0;
+    text-align: right;
+  }
+  

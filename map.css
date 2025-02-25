@@ -28,7 +28,15 @@ svg circle {
   stroke: white;              /* White border for better contrast */
   stroke-width: 1;            /* Border thickness */
   opacity: 0.8;     
-  pointer-events: auto          /* Overall opacity for circles */
+  pointer-events: auto;
+  --color-departures: steelblue;
+  --color-arrivals: darkorange;
+  --color: color-mix(
+    in oklch,
+    var(--color-departures) calc(100% * var(--departure-ratio)),
+    var(--color-arrivals)
+  );
+  fill: var(--color);
 }
 header {
   display: flex;
@@ -43,9 +51,4 @@ header div {
   gap: 10px;
   text-align: right;
 }
-#time-filter-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px; /* Adds space between the slider and text */
-}
+
