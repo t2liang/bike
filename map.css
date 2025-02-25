@@ -8,9 +8,44 @@ html, body {
     align-items: center;     /* Center vertically */
   }
      
-  #map {
+#map {
     width: 100%;    /* Adjust width to your desired size */
     height: 100%;   /* Adjust height to your desired size */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow for effect */
     border-radius: 8px; /* Optional: rounded corners */
-  }
+}
+#map svg {
+  width: 100%;    /* Adjust width to your desired size */
+  height: 100%;
+  z-index:1;
+  position: absolute;
+  pointer-events: none;
+}
+  
+svg circle {
+  fill: skyblue;            /* Circle color */
+  fill-opacity: 0.55;          /* Set fill opacity to 60% */
+  stroke: white;              /* White border for better contrast */
+  stroke-width: 1;            /* Border thickness */
+  opacity: 0.8;     
+  pointer-events: auto          /* Overall opacity for circles */
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+}
+
+header div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  text-align: right;
+}
+#time-filter-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px; /* Adds space between the slider and text */
+}
