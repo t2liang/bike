@@ -16,6 +16,8 @@ function getCoords(station) {
   const { x, y } = map.project(point);  // Project to pixel coordinates
   return { cx: x, cy: y };  // Return as object for use in SVG attributes
 }
+let departuresByMinute = Array.from({ length: 1440 }, () => []);
+let arrivalsByMinute = Array.from({ length: 1440 }, () => []);
 
 map.on('load', async () => { 
     map.addSource('boston_route', {
@@ -69,7 +71,11 @@ map.on('load', async () => {
         trafficData = await d3.csv(url,
           (trip) => {
             trip.started_at = new Date(trip.started_at);
+            let startedMinutes = minutesSinceMidnight(trip.started_at); 
+            departuresByMinute[startedMinutes].push(trip);
             trip.ended_at = new Date(trip.ended_at);
+            let endedMinutes = minutesSinceMidnight(trip.ended_at); 
+            arrivalsByMinute[endedMinutes].push(trip);
             return trip;
           },
         );
@@ -79,7 +85,7 @@ map.on('load', async () => {
         console.error('Error loading JSON:', error); // Handle errors
     }
     let trips = trafficData;
-    const stations = computeStationTraffic(jsonData.data.stations, trips);
+    const stations = computeStationTraffic(jsonData.data.stations);
     const radiusScale = d3
     .scaleSqrt()
     .domain([0, d3.max(stations, (d) => d.totalTraffic)])
@@ -138,28 +144,10 @@ map.on('load', async () => {
     function minutesSinceMidnight(date) {
       return date.getHours() * 60 + date.getMinutes();
     }
-    function filterTripsbyTime(trips, timeFilter) {
-      return timeFilter === -1 
-        ? trips // If no filter is applied (-1), return all trips
-        : trips.filter((trip) => {
-            // Convert trip start and end times to minutes since midnight
-            const startedMinutes = minutesSinceMidnight(trip.started_at);
-            const endedMinutes = minutesSinceMidnight(trip.ended_at);
-            
-            // Include trips that started or ended within 60 minutes of the selected time
-            return (
-              Math.abs(startedMinutes - timeFilter) <= 60 ||
-              Math.abs(endedMinutes - timeFilter) <= 60
-            );
-        });
-    }
+    
 
     function updateScatterPlot(timeFilter) {
-      // Get only the trips that match the selected time filter
-      const filteredTrips = filterTripsbyTime(trips, timeFilter);
-      
-      // Recompute station traffic based on the filtered trips
-      const filteredStations = computeStationTraffic(stations, filteredTrips);
+      const filteredStations = computeStationTraffic(stations, timeFilter);
       timeFilter === -1 ? radiusScale.range([0, 25]) : radiusScale.range([3, 50]);
       
       // Update the scatterplot by adjusting the radius of circles
@@ -178,21 +166,37 @@ function formatTime(minutes) {
   return date.toLocaleString('en-US', { timeStyle: 'short' }); // Format as HH:MM AM/PM
 }
 
+function filterByMinute(tripsByMinute, minute) {
+  if (minute === -1) {
+    return tripsByMinute.flat(); // No filtering, return all trips
+  }
 
+  // Normalize both min and max minutes to the valid range [0, 1439]
+  let minMinute = (minute - 60 + 1440) % 1440;
+  let maxMinute = (minute + 60) % 1440;
 
-function computeStationTraffic(stations, trips) {
-  // Compute departures
+  // Handle time filtering across midnight
+  if (minMinute > maxMinute) {
+    let beforeMidnight = tripsByMinute.slice(minMinute);
+    let afterMidnight = tripsByMinute.slice(0, maxMinute);
+    return beforeMidnight.concat(afterMidnight).flat();
+  } else {
+    return tripsByMinute.slice(minMinute, maxMinute).flat();
+  }
+}
+
+function computeStationTraffic(stations, timeFilter = -1) {
   const departures = d3.rollup(
-      trips, 
-      (v) => v.length, 
-      (d) => d.start_station_id
+    filterByMinute(departuresByMinute, timeFilter), // Efficient retrieval
+    (v) => v.length,
+    (d) => d.start_station_id
   );
   const arrivals = d3.rollup(
-    trips,
+    filterByMinute(arrivalsByMinute, timeFilter), // Efficient retrieval
     (v) => v.length,
-    (d) => d.end_station_id,
+    (d) => d.end_station_id
   );
-
+  
   // Update each station..
   return stations.map((station) => {
     let id = station.short_name;
